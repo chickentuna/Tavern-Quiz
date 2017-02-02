@@ -59,6 +59,10 @@ function launch() {
 
 	var realName = card.name;
 
+	var propositions = [realName];
+
+	var cardWords = [];
+
 	var word = (realName.split(' ')[0]);
 	
 	$('#propositions').empty();
