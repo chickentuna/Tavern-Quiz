@@ -1,7 +1,3 @@
-var http = axios.create({
-  headers : {'Access-Control-Allow-Origin': '*'}
-});
-
 function randInt(n) {
 	return Math.floor(n * Math.random());
 }
@@ -30,17 +26,16 @@ function init() {
 }
 
 function retrieveSynonymns(word) {
-$.ajax({ 
-  url: 'http://thesaurus.altervista.org/thesaurus/v1?word=' + word + '&language=en_US&output=json&key=TeR4qHrTKo2ruvyPMlHc',
-  success: function(data) {
-    process(data);
-  }, 
-  error: function(xhr, status, error){ 
-    launch();
-  } 
-});
-}
 
+axios.get('http://thesaurus.altervista.org/thesaurus/v1?word=' + word + '&language=en_US&output=json&key=TeR4qHrTKo2ruvyPMlHc')
+	.then(function (response) {
+		process(response.data);
+	})
+	.catch(function (error) {
+		launch();
+	});
+
+}
 function process(data) {
 	var possibilities = [];
 
