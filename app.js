@@ -6,6 +6,12 @@ function choose(arr) {
 	return arr[randInt(arr.length)];
 }
 
+var ignore = [
+	'can',
+	'of',
+	'the'
+]
+
 var categories = [
   "Basic",
   "Classic",
@@ -26,17 +32,9 @@ function init() {
 }
 
 function retrieveSynonymns(word) {
-
-axios.get('http://thesaurus.altervista.org/thesaurus/v1?word=' + word + '&language=en_US&output=json&key=TeR4qHrTKo2ruvyPMlHc')
-	.then(function (response) {
-		process(response.data);
-	})
-	.catch(function (error) {
-		launch();
-	});
-
+	return axios.get('http://thesaurus.altervista.org/thesaurus/v1?word=' + word + '&language=en_US&output=json&key=TeR4qHrTKo2ruvyPMlHc')
 }
-function process(data) {
+function processSynonyms(data) {
 	var possibilities = [];
 
 	for (var i = 0; i < data.response.length; ++i) {
@@ -44,11 +42,18 @@ function process(data) {
 		var remain = synonyms.split('|').map(word => word.replace(/\ \([^)]*\)$/, '')).filter(word => word.indexOf(' ') === -1);
 		possibilities = possibilities.concat(remain);
 	}
-	console.log(possibilities);
-	$('#card img').attr('src', cardImg);
+	
+	return possibilities;
 }
 
 var cardImg;
+
+function getCallback(index, list) {
+	return function(data) {
+		var all = processSynonyms(data.data);
+		list[index] = all;
+	};
+}
 
 function launch() {
 	var category = choose(categories);
@@ -58,19 +63,33 @@ function launch() {
 	cardImg = allCards.ru[category].filter(v=>v.cardId === card.cardId)[0].img;
 
 	var realName = card.name;
+	var decontructed = realName.split(' ');
 
-	var propositions = [realName];
+	var possibles = [];
+	var promises = [];
+	for (var i = 0; i < decontructed.length; ++i) {
+		var word = decontructed[i];
+		var possessive = word.indexOf("'s") > -1;
+		if (possessive) {
+			word = word.replace("'s", '');
+		}
+		
+		possibles[i] = [decontructed[i]];
 
-	var cardWords = [];
+		if (ignore.indexOf(word) == -1) {
+			promises.push(retrieveSynonymns(word).then(getCallback(i, possibles));
+		}
+	}
 
-	var word = (realName.split(' ')[0]);
+	axios.all(promises).then(function() {
+		var propositions = [realName];	
+		$('#propositions').empty();
+		$('#propositions').append('<li><button onclick="launch()">'+realName+'</button></li>')
+		$('#card img').attr('src', cardImg);
+		console.log(possibles);
+	});
+
 	
-	$('#propositions').empty();
-	$('#propositions').append('<li><button onclick="launch()">'+realName+'</button></li>')
-
-	retrieveSynonymns(word);
-
-
 }
 
 var key = 'TeR4qHrTKo2ruvyPMlHc'
