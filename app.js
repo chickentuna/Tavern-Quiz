@@ -32,14 +32,22 @@ function init() {
 }
 
 function retrieveSynonymns(word) {
-	return axios.get('http://thesaurus.altervista.org/thesaurus/v1?word=' + word + '&language=en_US&output=json&key=TeR4qHrTKo2ruvyPMlHc')
+	return axios.get('http://www.stands4.com/services/v2/syno.php?word=' + word + '&uid=5568&tokenid=UdJmSHBQsYGz41Id')
 }
 function processSynonyms(data) {
 	var possibilities = [];
 
-	for (var i = 0; i < data.response.length; ++i) {
-		var synonyms = data.response[i].list.synonyms;
-		var remain = synonyms.split('|').map(word => word.replace(/\ \([^)]*\)$/, '')).filter(word => word.indexOf(' ') === -1);
+	var parser = new DOMParser();
+	var xmlDoc = parser.parseFromString(data,"text/xml");
+
+	var xmlSynonyms = $(xmlDoc).find('results synonyms');
+
+	for (var i = 0; i < xmlSynonyms.length; ++i) {
+		if (!xmlSynonyms[i].childNodes[0]) {
+			break;
+		}
+		var synonyms = xmlSynonyms[i].childNodes[0].nodeValue;
+		var remain = synonyms.split(', ').filter(w=>w.indexOf(' ') === -1);
 		possibilities = possibilities.concat(remain);
 	}
 	
@@ -89,8 +97,8 @@ function launch() {
 	//TODO: if possessive, pick only nouns
 
 	axios.all(promises).then(function() {
-		var propositions = [realName];	
-		
+		var propositions = [realName.split(' ').map(w=>w[0].toUpperCase() + w.slice(1)).join(' ')];
+
 		$('#card img').attr('src', cardImg);
 		if (possibles.every(v => v.length == 1)) {
 			launch();
@@ -99,6 +107,7 @@ function launch() {
 
 		var n = 6;
 		for (var i = 0; i < n; ++i) {
+
 			var reconstructed = possibles.map(arr => choose(arr)).map(str => str[0].toUpperCase() + str.slice(1));
 			var name = reconstructed.join(' ');
 			if (propositions.indexOf(name) == -1) {
