@@ -19,10 +19,12 @@ var categories = [
   "Goblins vs Gnomes",
   "Blackrock Mountain",
   "The Grand Tournament",
-  "The League of Explorers",
-  "Whispers of the Old Gods",
-  "Karazhan"
-];
+  "The League of Explorers"
+
+var englishOnly = [
+	"Mean Streets of Gadgetzan",
+	"Whispers of the Old Gods"
+]
 
 var allCards;
 
@@ -72,7 +74,11 @@ function launch() {
 	var n = randInt(allCards.en[category].length)
 	var card = choose(allCards.en[category]);
 
-	cardImg = allCards.ru[category].filter(v=>v.cardId === card.cardId)[0].img;
+	if (category === "Whispers of the Old Gods") {
+		cardImg = allCards.de.filter(v=>v.cardId === card.cardId)[0].img;
+	} else {
+		cardImg = allCards.ru[category].filter(v=>v.cardId === card.cardId)[0].img;
+	}
 
 	var realName = card.name;
 	var decontructed = realName.split(' ');

@@ -47363,8 +47363,8 @@ var allCardsRU = {
 };
 
 function getAllCards() {
-	return {
-		ru: allCardsRU,
-		en: allCardsEN
-	};
+  return {
+    ru: allCardsRU,
+    en: allCardsEN
+  };
 }
