@@ -82,6 +82,8 @@ function uniq(a) {
     })
 }
 
+var correct = '';
+
 function launch() {
 	$('#card img').attr('src', '');
 
@@ -112,7 +114,6 @@ function launch() {
 	}
 
 	//TODO: if possessive, pick only nouns
-	//TODO: put possessive 's back
 
 	axios.all(promises).then(function() {
 		if (possibles.every(v => uniq(v).length == 1)) {
@@ -121,6 +122,7 @@ function launch() {
 		}
 		$('#card img').attr('src', cardImg);
 
+		correct = [];
 		var props = $('#propositions');
 		props.empty();
 		for (var j = 0; j < possibles.length; ++j) {
@@ -133,24 +135,18 @@ function launch() {
 			    opt.innerHTML = cuisines[i];
 			    opt.value = cuisines[i];
 			    sel.append(opt);
+			    if (cuisines[i] === titleCase(decontructed[j])) {
+			    	correct.push(cuisines[i]);
+			    }
 			}
 		}
 		props.css('display', 'flex');
-		
-
-		// for (var i = 0; i < propositions.length; ++i) {
-		// 	if (propositions[i] == realProposition) {
-		// 		$('#propositions').append('<li><button onclick="correct()">' + propositions[i] + '</button></li>')	
-		// 	} else {
-		// 		$('#propositions').append('<li><button onclick="wrong()">' + propositions[i] + '</button></li>')
-		// 	}
-		// }
 	});
 
 	
 }
 
-function correct() {
+function right() {
 	alert('Correct');
 	launch();
 }
@@ -167,5 +163,15 @@ function shuffle(a) {
 }
 
 function ok() {
-	
+	var answer = []
+	var selects = $('#propositions select');
+	for (var i = 0; i < selects.length; ++i) {
+		answer.push(selects[i].value);
+	}
+	if (answer.join(' ') === correct.join(' ')) {
+		right();
+	} else {
+		wrong();
+	}
+
 }
