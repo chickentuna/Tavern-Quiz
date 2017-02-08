@@ -20,6 +20,7 @@ var categories = [
   "Blackrock Mountain",
   "The Grand Tournament",
   "The League of Explorers"
+];
 
 var englishOnly = [
 	"Mean Streets of Gadgetzan",
@@ -50,7 +51,7 @@ function processSynonyms(data) {
 			break;
 		}
 		var synonyms = xmlSynonyms[i].childNodes[0].nodeValue;
-		var remain = synonyms.split(', ').filter(w=>w.indexOf(' ') === -1);
+		var remain = synonyms.split(', ').map(w=>w.replace(/\(.\)/, '')).filter(w=>w.indexOf(' ') === -1);
 		possibilities = possibilities.concat(remain);
 	}
 	
@@ -66,6 +67,16 @@ function getCallback(index, list) {
 		list[index] = all;
 		all.push(truth);
 	};
+}
+
+function titleCase(str) {
+	return str[0].toUpperCase() + str.slice(1);
+}
+
+function uniq(a) {
+    return a.sort().filter(function(item, pos, ary) {
+        return !pos || item != ary[pos - 1];
+    })
 }
 
 function launch() {
@@ -99,38 +110,39 @@ function launch() {
 
 	//TODO: if possessive, pick only nouns
 	//TODO: put possessive 's back
-	//TODO: get rid of (a)
+	//TODO: sort alphabetically the options
 
 	axios.all(promises).then(function() {
-		var realProposition = realName.split(' ').map(w=>w[0].toUpperCase() + w.slice(1)).join(' ');
-		var propositions = [realProposition];
-
-		$('#card img').attr('src', cardImg);
 		if (possibles.every(v => v.length == 1)) {
 			launch();
 			return;
 		}
+		$('#card img').attr('src', cardImg);
 
-		var n = 6;
-		for (var i = 0; i < n; ++i) {
-
-			var reconstructed = possibles.map(arr => choose(arr)).map(str => str[0].toUpperCase() + str.slice(1));
-			var name = reconstructed.join(' ');
-			if (propositions.indexOf(name) == -1) {
-				propositions.push(name);
-			}
+		var props = $('#propositions');
+		props.empty();
+		for (var j = 0; j < possibles.length; ++j) {
+			var sel = document.createElement('select');
+			props.append(sel);
 			
-		}
-
-		shuffle(propositions);
-		$('#propositions').empty();
-		for (var i = 0; i < propositions.length; ++i) {
-			if (propositions[i] == realProposition) {
-				$('#propositions').append('<li><button onclick="correct()">' + propositions[i] + '</button></li>')	
-			} else {
-				$('#propositions').append('<li><button onclick="wrong()">' + propositions[i] + '</button></li>')
+			var cuisines = uniq(possibles[j].map(w=>titleCase(w)));
+			for(var i = 0; i < cuisines.length; i++) {
+			    var opt = document.createElement('option');
+			    opt.innerHTML = cuisines[i];
+			    opt.value = cuisines[i];
+			    sel.append(opt);
 			}
 		}
+		props.css('display', 'flex');
+		
+
+		// for (var i = 0; i < propositions.length; ++i) {
+		// 	if (propositions[i] == realProposition) {
+		// 		$('#propositions').append('<li><button onclick="correct()">' + propositions[i] + '</button></li>')	
+		// 	} else {
+		// 		$('#propositions').append('<li><button onclick="wrong()">' + propositions[i] + '</button></li>')
+		// 	}
+		// }
 	});
 
 	
@@ -150,4 +162,8 @@ function shuffle(a) {
         let j = Math.floor(Math.random() * i);
         [a[i - 1], a[j]] = [a[j], a[i - 1]];
     }
+}
+
+function ok() {
+	
 }
