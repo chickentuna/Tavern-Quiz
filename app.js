@@ -97,9 +97,12 @@ function launch() {
 	}
 
 	//TODO: if possessive, pick only nouns
+	//TODO: put possessive 's back
+	//TODO: get rid of (a)
 
 	axios.all(promises).then(function() {
-		var propositions = [realName.split(' ').map(w=>w[0].toUpperCase() + w.slice(1)).join(' ')];
+		var realProposition = realName.split(' ').map(w=>w[0].toUpperCase() + w.slice(1)).join(' ');
+		var propositions = [realProposition];
 
 		$('#card img').attr('src', cardImg);
 		if (possibles.every(v => v.length == 1)) {
@@ -121,7 +124,7 @@ function launch() {
 		shuffle(propositions);
 		$('#propositions').empty();
 		for (var i = 0; i < propositions.length; ++i) {
-			if (propositions[i] == realName) {
+			if (propositions[i] == realProposition) {
 				$('#propositions').append('<li><button onclick="correct()">' + propositions[i] + '</button></li>')	
 			} else {
 				$('#propositions').append('<li><button onclick="wrong()">' + propositions[i] + '</button></li>')
@@ -147,6 +150,3 @@ function shuffle(a) {
         [a[i - 1], a[j]] = [a[j], a[i - 1]];
     }
 }
-
-var key = 'TeR4qHrTKo2ruvyPMlHc'
-
