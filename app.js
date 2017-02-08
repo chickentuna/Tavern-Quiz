@@ -23,7 +23,8 @@ var categories = [
 
 var englishOnly = [
 	"Mean Streets of Gadgetzan",
-	"Whispers of the Old Gods"
+	"Whispers of the Old Gods",
+	"Karazhan"
 ]
 
 var allCards;
