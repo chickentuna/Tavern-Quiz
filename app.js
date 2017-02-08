@@ -107,16 +107,13 @@ function launch() {
 		
 		possibles[i] = [decontructed[i]];
 
-		if (ignore.indexOf(word) == -1) {
+		if (ignore.indexOf(word.toLowerCase()) == -1) {
 			promises.push(retrieveSynonymns(word).then(getCallback(i, possibles, possessive)));
 		}
-
 	}
 
-	//TODO: if possessive, pick only nouns
-
 	axios.all(promises).then(function() {
-		if (possibles.every(v => uniq(v).length == 1)) {
+		if (possibles.every(v => uniq(v.map(w => titleCase(w))).length == 1)) {
 			launch();
 			return;
 		}
@@ -129,15 +126,19 @@ function launch() {
 			var sel = document.createElement('select');
 			props.append(sel);
 			
-			var cuisines = uniq(possibles[j].map(w=>titleCase(w)));
-			for(var i = 0; i < cuisines.length; i++) {
+			var words = uniq(possibles[j].map(w=>titleCase(w)));
+			for(var i = 0; i < words.length; i++) {
 			    var opt = document.createElement('option');
-			    opt.innerHTML = cuisines[i];
-			    opt.value = cuisines[i];
+			    opt.innerHTML = words[i];
+			    opt.value = words[i];
+
 			    sel.append(opt);
-			    if (cuisines[i] === titleCase(decontructed[j])) {
-			    	correct.push(cuisines[i]);
+			    if (words[i] === titleCase(decontructed[j])) {
+			    	correct.push(words[i]);
 			    }
+			}
+			if (words.length == 1)  {
+				sel.setAttribute('disabled', true)
 			}
 		}
 		props.css('display', 'flex');
@@ -151,7 +152,7 @@ function right() {
 	launch();
 }
 function wrong() {
-	alert('Wrong');
+	alert('Wrong. The correct answer was ' + correct.join(' '));
 	launch();
 }
 
