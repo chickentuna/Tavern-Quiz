@@ -38,7 +38,7 @@ function init() {
 function retrieveSynonymns(word) {
 	return axios.get('http://www.stands4.com/services/v2/syno.php?word=' + word + '&uid=5568&tokenid=UdJmSHBQsYGz41Id')
 }
-function processSynonyms(data) {
+function processSynonyms(data, possessive) {
 	var possibilities = [];
 
 	var parser = new DOMParser();
@@ -52,6 +52,9 @@ function processSynonyms(data) {
 		}
 		var synonyms = xmlSynonyms[i].childNodes[0].nodeValue;
 		var remain = synonyms.split(', ').map(w=>w.replace(/\(.\)/, '')).filter(w=>w.indexOf(' ') === -1);
+		if (possessive) {
+			remain = remain.map(w => w + "'s");
+		}
 		possibilities = possibilities.concat(remain);
 	}
 	
@@ -60,9 +63,9 @@ function processSynonyms(data) {
 
 var cardImg;
 
-function getCallback(index, list) {
+function getCallback(index, list, possessive) {
 	return function(data) {
-		var all = processSynonyms(data.data);
+		var all = processSynonyms(data.data, possessive);
 		var truth = list[index][0]
 		list[index] = all;
 		all.push(truth);
@@ -103,17 +106,16 @@ function launch() {
 		possibles[i] = [decontructed[i]];
 
 		if (ignore.indexOf(word) == -1) {
-			promises.push(retrieveSynonymns(word).then(getCallback(i, possibles)));
+			promises.push(retrieveSynonymns(word).then(getCallback(i, possibles, possessive)));
 		}
 
 	}
 
 	//TODO: if possessive, pick only nouns
 	//TODO: put possessive 's back
-	//TODO: sort alphabetically the options
 
 	axios.all(promises).then(function() {
-		if (possibles.every(v => v.length == 1)) {
+		if (possibles.every(v => uniq(v).length == 1)) {
 			launch();
 			return;
 		}
