@@ -13,13 +13,13 @@ var ignore = [
 ]
 
 var categories = [
-  "Basic",
-  "Classic",
-  "Naxxramas",
-  "Goblins vs Gnomes",
-  "Blackrock Mountain",
-  "The Grand Tournament",
-  "The League of Explorers"
+	"Basic",
+	"Classic",
+	"Naxxramas",
+	"Goblins vs Gnomes",
+	"Blackrock Mountain",
+	"The Grand Tournament",
+	"The League of Explorers"
 ];
 
 var englishOnly = [
@@ -35,37 +35,30 @@ function init() {
 	launch();
 }
 
-function retrieveSynonymns(word) {
-	return axios.get('http://www.stands4.com/services/v2/syno.php?word=' + word + '&uid=5568&tokenid=UdJmSHBQsYGz41Id')
+async function retrieveSynonymns(word) {
+	const s = await fetch(`https://api.datamuse.com/words?ml=${word}`, {
+		"method": "GET"
+	})
+	return await s.json()
 }
 function processSynonyms(data, possessive) {
 	var possibilities = [];
 
-	var parser = new DOMParser();
-	var xmlDoc = parser.parseFromString(data,"text/xml");
-
-	var xmlSynonyms = $(xmlDoc).find('results synonyms');
-
-	for (var i = 0; i < xmlSynonyms.length; ++i) {
-		if (!xmlSynonyms[i].childNodes[0]) {
-			break;
-		}
-		var synonyms = xmlSynonyms[i].childNodes[0].nodeValue;
-		var remain = synonyms.split(', ').map(w=>w.replace(/\(.\)/, '')).filter(w=>w.indexOf(' ') === -1);
-		if (possessive) {
-			remain = remain.map(w => w + "'s");
-		}
-		possibilities = possibilities.concat(remain);
+	var remain = data.filter(v=>v.score >= 60000).map(w => w.word.replace(/\(.\)/, '')).filter(w => w.indexOf(' ') === -1);
+	if (possessive) {
+		remain = remain.map(w => w + "'s");
 	}
-	
+	possibilities = possibilities.concat(remain);
+
 	return possibilities;
 }
 
 var cardImg;
 
 function getCallback(index, list, possessive) {
-	return function(data) {
-		var all = processSynonyms(data.data, possessive);
+	return function (data) {
+		console.log(data)
+		var all = processSynonyms(data, possessive);
 		var truth = list[index][0]
 		list[index] = all;
 		all.push(truth);
@@ -77,9 +70,9 @@ function titleCase(str) {
 }
 
 function uniq(a) {
-    return a.sort().filter(function(item, pos, ary) {
-        return !pos || item != ary[pos - 1];
-    })
+	return a.sort().filter(function (item, pos, ary) {
+		return !pos || item != ary[pos - 1];
+	})
 }
 
 var correct = '';
@@ -91,7 +84,7 @@ function launch() {
 	var n = randInt(allCards.en[category].length)
 	var card = choose(allCards.en[category]);
 
-	cardImg = allCards.ru[category].filter(v=>v.cardId === card.cardId)[0].img;
+	cardImg = allCards.ru[category].filter(v => v.cardId === card.cardId)[0].img;
 
 	var realName = card.name;
 	var decontructed = realName.split(' ');
@@ -104,7 +97,7 @@ function launch() {
 		if (possessive) {
 			word = word.replace("'s", '');
 		}
-		
+
 		possibles[i] = [decontructed[i]];
 
 		if (ignore.indexOf(word.toLowerCase()) == -1) {
@@ -112,8 +105,8 @@ function launch() {
 		}
 	}
 
-	axios.all(promises).then(function() {
-		if (possibles.every(v => uniq(v.map(w => titleCase(w))).length == 1)) {
+	axios.all(promises).then(function () {
+		if (possibles.every(v => uniq(v.map(w => titleCase(w))).length <= 1)) {
 			launch();
 			return;
 		}
@@ -125,26 +118,26 @@ function launch() {
 		for (var j = 0; j < possibles.length; ++j) {
 			var sel = document.createElement('select');
 			props.append(sel);
-			
-			var words = uniq(possibles[j].map(w=>titleCase(w)));
-			for(var i = 0; i < words.length; i++) {
-			    var opt = document.createElement('option');
-			    opt.innerHTML = words[i];
-			    opt.value = words[i];
 
-			    sel.append(opt);
-			    if (words[i] === titleCase(decontructed[j])) {
-			    	correct.push(words[i]);
-			    }
+			var words = uniq(possibles[j].map(w => titleCase(w)));
+			for (var i = 0; i < words.length; i++) {
+				var opt = document.createElement('option');
+				opt.innerHTML = words[i];
+				opt.value = words[i];
+
+				sel.append(opt);
+				if (words[i] === titleCase(decontructed[j])) {
+					correct.push(words[i]);
+				}
 			}
-			if (words.length == 1)  {
+			if (words.length == 1) {
 				sel.setAttribute('disabled', true)
 			}
 		}
 		props.css('display', 'flex');
 	});
 
-	
+
 }
 
 function right() {
@@ -157,10 +150,10 @@ function wrong() {
 }
 
 function shuffle(a) {
-    for (let i = a.length; i; i--) {
-        let j = Math.floor(Math.random() * i);
-        [a[i - 1], a[j]] = [a[j], a[i - 1]];
-    }
+	for (let i = a.length; i; i--) {
+		let j = Math.floor(Math.random() * i);
+		[a[i - 1], a[j]] = [a[j], a[i - 1]];
+	}
 }
 
 function ok() {
